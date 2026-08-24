@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
-namespace BuildingBlocks.Behaviours
+namespace BuildingBlocks.Behaviors
 {
     public class ValidationBehaviors<TRequest, TResponse> 
         (IEnumerable<IValidator<TRequest>> validators)
