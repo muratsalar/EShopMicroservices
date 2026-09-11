@@ -25,6 +25,14 @@ services:
     volumes:
       - postgres_basket:/var/lib/postgresql/data/
 
+
+  distributedcache:
+    image: redis
+    container_name: distributedcache
+    restart: always
+    ports:
+      - "6379:6379"
+
   catalog.api:
     build:
       context: .
@@ -43,6 +51,36 @@ services:
     ports:
       - "6000:8080"
       - "6060:8081"
+    volumes:
+      - ${WIN_APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${WIN_APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+
+  basket.api:
+    build:
+      context: .
+      dockerfile: Services/Basket/Basket.API/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+      - ConnectionStrings__Database=Server=basketdb;Port=5432;Database=BasketDb;User Id=postgres;Password=postgres;Include Error Detail=true
+      - ConnectionStrings__Redis=distributedcache:6379
+      - GrpcSettings__DiscountUrl=https://discount.grpc:8081
+      - MessageBroker__Host=amqp://ecommerce-mq:5672
+      - MessageBroker__UserName=guest
+      - MessageBroker__Password=guest
+        #  Change "my-existing-cert.pfx" to your actual certificate filename
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/home/app/.aspnet/https/Basket.api.pfx
+      # Set the password for your existing certificate (leave blank if it has no password)
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=${DEV_CERTIFICATE_PASSWORD}
+    depends_on:
+      - basketdb
+      - distributedcache
+      #- discount.grpc
+      #- messagebroker
+    ports:
+      - "6001:8080"
+      - "6061:8081"
     volumes:
       - ${WIN_APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${WIN_APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
