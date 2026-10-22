@@ -85,6 +85,27 @@ services:
       - ${WIN_APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${WIN_APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
 
+  discount.grpc:
+    image: ${DOCKER_REGISTRY-}discountgrpc
+    build:
+      context: .
+      dockerfile: Services/Discount/Discount.Grpc/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+      - ConnectionStrings__Database=Data Source=discountdb
+      #  Change "my-existing-cert.pfx" to your actual certificate filename
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/home/app/.aspnet/https/Discount.grpc.pfx
+      # Set the password for your existing certificate (leave blank if it has no password)
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=${DEV_CERTIFICATE_PASSWORD}
+    ports:
+      - "6002:8080"
+      - "6062:8081"
+    volumes:
+      - ${WIN_APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${WIN_APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+
 volumes:
   postgres_catalog:
   postgres_basket:
